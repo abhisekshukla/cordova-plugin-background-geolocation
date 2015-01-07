@@ -32,7 +32,6 @@
         <source-file src="src/android/data/sqlite/LocationOpenHelper.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc/data/sqlite" />
         <source-file src="src/android/data/sqlite/SQLiteLocationDAO.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc/data/sqlite" />
 
-        <source-file src="src/android/notification.png" target-dir="res/drawable" />
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <service android:name="com.tenforwardconsulting.cordova.bgloc.LocationUpdateService" android:enabled="true" android:process=":remote" />
