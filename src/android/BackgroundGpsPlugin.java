@@ -46,7 +46,7 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) {
         Activity activity = this.cordova.getActivity();
         Boolean result = false;
-        updateServiceIntent = new Intent(activity, LocationUpdateService.class);
+        updateServiceIntent = new Intent(activity, TraxLocationUpdateService.class);
 
         if (ACTION_START.equalsIgnoreCase(action) && !isEnabled) {
             result = true;
