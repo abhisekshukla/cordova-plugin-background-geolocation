@@ -25,8 +25,12 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
     public static final String ACTION_CONFIGURE = "configure";
     public static final String ACTION_SET_CONFIG = "setConfig";
     public static final String ACTION_GET_LOCATIONS = "getLocations";
+    public static final String ACTION_START_DRIVE_DETECTION = "startDriveDetection";
+    public static final String ACTION_STOP_DRIVE_DETECTION = "stopDriveDetection";
+    public static final String ACTION_IS_DRIVE_DETECTED = "isDriveDetected";
 
     private Intent updateServiceIntent;
+    private Intent driveDetectionServiceIntent;
 
     private Boolean isEnabled = false;
 
@@ -47,6 +51,7 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
         Activity activity = this.cordova.getActivity();
         Boolean result = false;
         updateServiceIntent = new Intent(activity, TraxLocationUpdateService.class);
+        driveDetectionServiceIntent = new Intent(activity, TraxLocationDriveDetectionService.class);
 
         if (ACTION_START.equalsIgnoreCase(action) && !isEnabled) {
             result = true;
@@ -69,12 +74,14 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
                 updateServiceIntent.putExtra("postLocationsToServer", postLocationsToServer);
 
                 activity.startService(updateServiceIntent);
+                activity.stopService(driveDetectionServiceIntent);
                 isEnabled = true;
             }
         } else if (ACTION_STOP.equalsIgnoreCase(action)) {
             isEnabled = false;
             result = true;
             activity.stopService(updateServiceIntent);
+            activity.startService(driveDetectionServiceIntent);
             callbackContext.success();
         } else if (ACTION_CONFIGURE.equalsIgnoreCase(action)) {
             result = true;
@@ -112,6 +119,22 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
             catch (JSONException e) {
                 callbackContext.error(e.getMessage());
             }
+        } else if (ACTION_START_DRIVE_DETECTION.equalsIgnoreCase(action)) {
+            activity.startService(driveDetectionServiceIntent);
+            callbackContext.success();
+        } else if (ACTION_STOP_DRIVE_DETECTION.equalsIgnoreCase(action)) {
+            activity.stopService(driveDetectionServiceIntent);
+            callbackContext.success();
+        } else if (ACTION_IS_DRIVE_DETECTED.equalsIgnoreCase(action)) {
+            try {
+                Context applicationContext = this.cordova.getActivity().getApplicationContext();
+                boolean isDriving = TraxLocationDriveDetectionUtil.isDriving(applicationContext);
+                JSONObject obj = new JSONObject();
+                obj.put("isDriving", isDriving);
+                callbackContext.success(obj);
+            } catch (JSONException e) {
+                callbackContext.error(e.getMessage());
+            }
         }
 
         return result;
@@ -126,6 +149,7 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 
         if(isEnabled && stopOnTerminate.equalsIgnoreCase("true")) {
             activity.stopService(updateServiceIntent);
+            activity.stopService(driveDetectionServiceIntent);
         }
     }
 

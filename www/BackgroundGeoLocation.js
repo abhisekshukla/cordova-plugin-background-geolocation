@@ -62,7 +62,7 @@ module.exports = {
     },
     getLocations: function (success, failure, config) {
         var deleteLocations = typeof config.deleteLocations === "undefined" ? true : config.deleteLocations;
-        exec(function(positions) { if (positions.length && success) { success(positions); } },
+        exec(function(positions) { if (positions !== "OK" && positions.length && success) { success(positions); } },
              failure || function() { },
              'BackgroundGeoLocation',
              'getLocations',
@@ -77,6 +77,38 @@ module.exports = {
     clearWatch: function (watchId, success, failure, config) {
         window.plugins.backgroundGeoLocation.stop(success, failure, config);
         window.clearTimeout(watchId);
+    },
+    startDriveDetection: function (success, failure, config) {
+        exec(success || function() {},
+            failure || function() {},
+            'BackgroundGeoLocation',
+            'startDriveDetection',
+            []);
+    },
+    stopDriveDetection: function (success, failure, config) {
+        exec(success || function() {},
+            failure || function() {},
+            'BackgroundGeoLocation',
+            'stopDriveDetection',
+            []);
+    },
+    isDriveDetected: function (success, failure, config) {
+        exec(function(obj) {
+            if (typeof obj.isDriving !== "undefined" && success) {
+                success(obj);
+            }
+        },
+        failure || function () { },
+        "BackgroundGeoLocation",
+        "isDriveDetected",
+        []);
+    },
+    watchDriveDetection: function (success, failure, config) {
+        config = config || {};
+        window.plugins.backgroundGeoLocation.startDriveDetection();
+        return window.setInterval(function () {
+            window.plugins.backgroundGeoLocation.isDriveDetected(success, failure, config);
+        }, config.interval || 60 * 1000);
     },
     /**
     * @param {Integer} stationaryRadius

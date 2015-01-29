@@ -31,7 +31,7 @@ public class SQLiteLocationDAO implements LocationDAO {
 		List<Location> all = new ArrayList<Location>();
 		try {
 			db = new LocationOpenHelper(context).getReadableDatabase();
-			c = db.query(LocationOpenHelper.LOCATION_TABLE_NAME, null, null, null, null, null, null);
+			c = db.query(this.getTableName(), null, null, null, null, null, null);
 			while (c.moveToNext()) {
 				all.add(hydrate(c));
 			}
@@ -50,8 +50,8 @@ public class SQLiteLocationDAO implements LocationDAO {
 		SQLiteDatabase db = new LocationOpenHelper(context).getWritableDatabase();
 		db.beginTransaction();
 		ContentValues values = getContentValues(location);
-		long rowId = db.insert(LocationOpenHelper.LOCATION_TABLE_NAME, null, values);
-		Log.d(TAG, "After insert, rowId = " + rowId);
+		long rowId = db.insert(this.getTableName(), null, values);
+		Log.d(this.getTag(), "After insert, rowId = " + rowId);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 		db.close();
@@ -67,10 +67,18 @@ public class SQLiteLocationDAO implements LocationDAO {
 	public void deleteLocation(Location location) {
 		SQLiteDatabase db = new LocationOpenHelper(context).getWritableDatabase();
 		db.beginTransaction();
-		db.delete(LocationOpenHelper.LOCATION_TABLE_NAME, "id = ?", new String[]{location.getId().toString()});
+		db.delete(this.getTableName(), "id = ?", new String[]{location.getId().toString()});
 		db.setTransactionSuccessful();
 		db.endTransaction();
 		db.close();
+	}
+
+	protected String getTableName() {
+		return LocationOpenHelper.LOCATION_TABLE_NAME;
+	}
+
+	protected String getTag() {
+		return TAG;
 	}
 	
 	private Location hydrate(Cursor c) {
