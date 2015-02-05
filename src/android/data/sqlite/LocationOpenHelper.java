@@ -20,7 +20,7 @@ public class LocationOpenHelper extends SQLiteOpenHelper {
         " latitude TEXT," +
         " longitude TEXT";
     private static final String LOCATION_TABLE_CREATE =
-        "CREATE TABLE " + LOCATION_TABLE_NAME + " (" +
+        "CREATE TABLE IF NOT EXISTS " + LOCATION_TABLE_NAME + " (" +
         LOCATION_TABLE_COLUMNS +
         ");";
 
@@ -46,6 +46,7 @@ public class LocationOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(LOCATION_TABLE_CREATE);
+        db.execSQL(DRIVE_DETECTION_LOCATION_TABLE_CREATE);
         Log.d(this.getClass().getName(), LOCATION_TABLE_CREATE);
     }
 
