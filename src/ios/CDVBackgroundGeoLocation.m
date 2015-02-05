@@ -305,9 +305,27 @@
 
 }
 
+- (void) requestPermissionIfNecessary
+{
+#ifdef __IPHONE_8_0
+    NSUInteger code = [CLLocationManager authorizationStatus];
+    if (code == kCLAuthorizationStatusNotDetermined && ([driveDetectionManager respondsToSelector:@selector(requestAlwaysAuthorization)] || [driveDetectionManager respondsToSelector:@selector(requestWhenInUseAuthorization)])) { //iOS8+
+        if([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationAlwaysUsageDescription"]){
+            [driveDetectionManager requestAlwaysAuthorization];
+        } else if([[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"]) {
+            [driveDetectionManager requestWhenInUseAuthorization];
+        } else {
+            NSLog(@"[Warning] No NSLocationAlwaysUsageDescription or NSLocationWhenInUseUsageDescription key is defined in the Info.plist file.");
+        }
+        return;
+    }
+#endif
+}
+
 - (void) watchDriveDetection:(CDVInvokedUrlCommand*)command
 {
     NSLog(@"- CDVBackgroundGeoLocation watchDriveDetection");
+    [self requestPermissionIfNecessary];
     [driveDetectionManager stopUpdatingLocation];
     [driveDetectionManager stopMonitoringSignificantLocationChanges];
     if ([CLLocationManager significantLocationChangeMonitoringAvailable])
