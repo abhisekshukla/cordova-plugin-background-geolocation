@@ -64,7 +64,7 @@
     NSInteger SPEEDY_LOCATIONS_THRESHOLD;
     double FLOOR;
     double CEILING;
-    NSString *FIVE_MIUTES;
+    float SPEEDY_LOCATIONS_TIME_WINDOW;
     double DESIRED_ACCURACY;
     double DISTANCE_FILTER;
 }
@@ -98,11 +98,11 @@
 
     speedyLocations = [NSMutableArray array];
     SPEEDY_LOCATIONS_THRESHOLD = 2;
-    FLOOR = 6.7056; //6.7056 meters/s ~ 15 miles per hour
+    FLOOR = 4.02336; //4.02336 meters/s ~ 9 miles per hour
     CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
-    FIVE_MIUTES = @"300.0f"; //300 seconds = 5 minutes
-    DESIRED_ACCURACY = kCLLocationAccuracyKilometer;
-    DISTANCE_FILTER = 804.672; //meters 804.672 meters ~ 1/2 mile
+    SPEEDY_LOCATIONS_TIME_WINDOW = 480.0; //8 minutes
+    DESIRED_ACCURACY = kCLLocationAccuracyHundredMeters;
+    DISTANCE_FILTER = 402.336; //meters 402.336 meters ~ 1/4 mile
 
     bgTask = UIBackgroundTaskInvalid;
 
@@ -149,6 +149,7 @@
     driveDetectionManager.pausesLocationUpdatesAutomatically = YES;
     driveDetectionManager.distanceFilter = DISTANCE_FILTER; // meters
     driveDetectionManager.desiredAccuracy = DESIRED_ACCURACY;
+    //pausesLocationUpdatesAutomatically defaults to true
 
     NSLog(@"CDVBackgroundGeoLocation configure");
     NSLog(@"  - token: %@", token);
@@ -358,13 +359,13 @@
     NSDate* now = [NSDate date];
     NSMutableArray *discardedItems = [NSMutableArray array];
     for (CLLocation *loc in speedyLocations) {
-        if ([now timeIntervalSinceDate:loc.timestamp] > 300.0f)
+        if ([now timeIntervalSinceDate:loc.timestamp] > SPEEDY_LOCATIONS_TIME_WINDOW)
         {
             [discardedItems addObject:loc];
         }
     }
     [speedyLocations removeObjectsInArray: discardedItems];
-    BOOL isDriving = [speedyLocations count] >= 2;
+    BOOL isDriving = [speedyLocations count] >= SPEEDY_LOCATIONS_THRESHOLD;
     return isDriving;
 }
 

@@ -34,8 +34,8 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private Criteria criteria;
     private LocationManager locationManager;
     private PowerManager.WakeLock wakeLock;
-    private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 60 * 1000; //milliseconds
-    private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 804.672; //meters 804.672 meters ~ 1/2 mile
+    private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 30 * 1000; //milliseconds
+    private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 402.336; //meters 402.336 meters ~ 1/4 mile
     private String TAG = "TraxLocationDriveDetectionService";
 
     @Override
