@@ -78,7 +78,7 @@ module.exports = {
         window.plugins.backgroundGeoLocation.stop(success, failure, config);
         window.clearTimeout(watchId);
     },
-    startDriveDetection: function (success, failure, config) {
+    android_startDriveDetection: function (success, failure, config) {
         exec(success || function() {},
             failure || function() {},
             'BackgroundGeoLocation',
@@ -92,7 +92,7 @@ module.exports = {
             'stopDriveDetection',
             []);
     },
-    isDriveDetected: function (success, failure, config) {
+    android_isDriveDetected: function (success, failure, config) {
         exec(function(obj) {
             if (typeof obj.isDriving !== "undefined" && success) {
                 success(obj);
@@ -103,12 +103,23 @@ module.exports = {
         "isDriveDetected",
         []);
     },
-    watchDriveDetection: function (success, failure, config) {
+    android_watchDriveDetectionWithInterval: function (success, failure, config) {
         config = config || {};
-        window.plugins.backgroundGeoLocation.startDriveDetection();
+        window.plugins.backgroundGeoLocation.android_startDriveDetection();
         return window.setInterval(function () {
-            window.plugins.backgroundGeoLocation.isDriveDetected(success, failure, config);
+            window.plugins.backgroundGeoLocation.android_isDriveDetected(success, failure, config);
         }, config.interval || 60 * 1000);
+    },
+    ios_watchDriveDetection: function (success, failure, config) {
+        exec(function(obj) {
+                if (obj && typeof obj.isDriving !== "undefined" && success) {
+                    success(obj);
+                }
+            },
+            failure || function () { },
+            'BackgroundGeoLocation',
+            'watchDriveDetection',
+            []);
     },
     /**
     * @param {Integer} stationaryRadius
