@@ -83,7 +83,7 @@ module.exports = {
             failure || function() {},
             'BackgroundGeoLocation',
             'startDriveDetection',
-            []);
+            [config.delayDriveDetection]);
     },
     stopDriveDetection: function (success, failure, config) {
         exec(success || function() {},
@@ -103,14 +103,7 @@ module.exports = {
         "isDriveDetected",
         []);
     },
-    android_watchDriveDetectionWithInterval: function (success, failure, config) {
-        config = config || {};
-        window.plugins.backgroundGeoLocation.android_startDriveDetection();
-        return window.setInterval(function () {
-            window.plugins.backgroundGeoLocation.android_isDriveDetected(success, failure, config);
-        }, config.interval || 60 * 1000);
-    },
-    ios_watchDriveDetection: function (success, failure, config) {
+    watchDriveDetection: function (success, failure, config) {
         exec(function(obj) {
                 if (obj && typeof obj.isDriving !== "undefined" && success) {
                     success(obj);
@@ -119,7 +112,7 @@ module.exports = {
             failure || function () { },
             'BackgroundGeoLocation',
             'watchDriveDetection',
-            []);
+            [config.delayDriveDetection]);
     },
     /**
     * @param {Integer} stationaryRadius

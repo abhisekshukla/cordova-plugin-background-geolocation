@@ -2,6 +2,10 @@ package com.tenforwardconsulting.cordova.bgloc;
 
 import java.util.Date;
 
+import org.apache.cordova.PluginResult;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -26,7 +30,8 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private String TAG = "TraxLocationDriveDetectionService";
     private Date driveDetectionDelayDate;
 	private double DRIVE_DETECTION_DELAY_WINDOW = 60 * 1000; //milliseconds
-
+    private boolean isDriving = false;
+    
     @Override
     public void onCreate() {
         Log.d(TAG, "creating");
@@ -57,10 +62,31 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
             new Date().getTime() - this.driveDetectionDelayDate.getTime() > DRIVE_DETECTION_DELAY_WINDOW)
         {
             this.persistLocation(location);
+            //check if we're driving
+            //if we're driving call the success callback
+            if ((!isDriving) && (TraxLocationDriveDetectionUtil.isDriving(BackgroundGpsPlugin.context))) {
+            	isDriving = true;
+            	BackgroundGpsPlugin.activity.runOnUiThread(new Runnable() {
+    				@Override
+    				public void run() {
+    	            	JSONObject obj = new JSONObject();
+    					try {
+    						obj.put("isDriving", isDriving);
+    		                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, obj);
+    		                pluginResult.setKeepCallback(true);
+
+    		                BackgroundGpsPlugin.driveDetectionCallbackContext.sendPluginResult(pluginResult);
+    					} catch (JSONException e) {
+    						isDriving = false;
+    					}
+    				}
+    			});
+            }
         }
         else {
             Log.d(TAG, "Did not persist location");
         }
+        
     }
 
     @Override
@@ -68,6 +94,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
         Log.d(TAG, "stoping");
         this.locationManager.removeUpdates(this);
         this.wakeLock.release();
+        this.isDriving = false;
         return super.stopService(intent);
     }
 

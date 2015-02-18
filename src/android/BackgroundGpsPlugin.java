@@ -2,6 +2,7 @@ package com.tenforwardconsulting.cordova.bgloc;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,9 +27,10 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
     public static final String ACTION_START_DRIVE_DETECTION = "startDriveDetection";
     public static final String ACTION_STOP_DRIVE_DETECTION = "stopDriveDetection";
     public static final String ACTION_IS_DRIVE_DETECTED = "isDriveDetected";
+    public static final String WATCH_DRIVE_DETECTION = "watchDriveDetection";
 
-	private Activity activity = null;
-	private Context context = null;
+	static Activity activity = null;
+	static Context context = null;
 	private Intent updateServiceIntent = null;
 	private Intent driveDetectionServiceIntent = null;
 
@@ -48,6 +50,7 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
     private boolean postLocationsToServer = true;
 
 	private Boolean isInitialized = false;
+	static CallbackContext driveDetectionCallbackContext = null;
 
 	private void init() throws JSONException {
 		if (!isInitialized) {
@@ -223,6 +226,21 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 					}
 				}
 			});
+			
+		} else if (WATCH_DRIVE_DETECTION.equalsIgnoreCase(action)) {
+			retVal = true;
+			activity.stopService(driveDetectionServiceIntent);
+			activity.startService(driveDetectionServiceIntent);
+			BackgroundGpsPlugin.driveDetectionCallbackContext = callbackContext;
+			activity.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
+				    pluginResult.setKeepCallback(true);
+				    BackgroundGpsPlugin.driveDetectionCallbackContext.sendPluginResult(pluginResult);
+				}
+			});
+
 		}
 		return retVal;
 	}
