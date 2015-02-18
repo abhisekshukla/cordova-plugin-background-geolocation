@@ -105,10 +105,10 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private void setupCriteria() {
         criteria = new Criteria();
 		criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
+		criteria.setHorizontalAccuracy(Criteria.ACCURACY_LOW);
+		criteria.setBearingAccuracy(Criteria.ACCURACY_LOW);
+		criteria.setVerticalAccuracy(Criteria.ACCURACY_LOW);
 		criteria.setPowerRequirement(Criteria.POWER_LOW);
-		criteria.setAccuracy(Criteria.NO_REQUIREMENT);
-		criteria.setBearingAccuracy(Criteria.NO_REQUIREMENT);
-		criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
     }
 
     private void persistLocation(Location location) {

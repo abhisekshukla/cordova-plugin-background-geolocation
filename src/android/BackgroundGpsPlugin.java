@@ -47,8 +47,11 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
     private String stopOnTerminate = "false";
     private boolean postLocationsToServer = true;
 
+	private Boolean isInitialized = false;
+
 	private void init() throws JSONException {
-		if ((activity == null) || (context == null) || (updateServiceIntent == null) || (driveDetectionServiceIntent == null)) {
+		if (!isInitialized) {
+			isInitialized = true;
 			activity = cordova.getActivity();
 			context = activity.getApplicationContext();
 			updateServiceIntent = new Intent(context, TraxLocationUpdateService.class);

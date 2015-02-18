@@ -86,10 +86,10 @@ public class TraxLocationUpdateService extends Service implements LocationListen
 
     private void setupCriteria() {
         criteria = new Criteria();
-		criteria.setAccuracy(Criteria.ACCURACY_HIGH);
-		criteria.setBearingAccuracy(Criteria.NO_REQUIREMENT);
-		criteria.setSpeedAccuracy(Criteria.NO_REQUIREMENT);
-		criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+		criteria.setBearingAccuracy(Criteria.ACCURACY_HIGH);
+		criteria.setSpeedAccuracy(Criteria.ACCURACY_HIGH);
+		criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
     }
 
     private void persistLocation(Location location) {
