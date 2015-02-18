@@ -1,39 +1,25 @@
 package com.tenforwardconsulting.cordova.bgloc;
 
-import java.util.List;
-import java.util.Iterator;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.tenforwardconsulting.cordova.bgloc.data.DAOFactory;
-import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
-
 import android.app.Service;
-
 import android.content.Context;
 import android.content.Intent;
-
-import android.location.Location;
 import android.location.Criteria;
+import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
-
 import android.util.Log;
+
+import com.tenforwardconsulting.cordova.bgloc.data.DAOFactory;
+import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
 
 public class TraxLocationUpdateService extends Service implements LocationListener {
     private Criteria criteria;
     private LocationManager locationManager;
     private PowerManager.WakeLock wakeLock;
-    private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 30 * 1000; //milliseconds
+	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 30 * 1000; //milliseconds
     private float MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 0; //meters
     private String TAG = "TraxLocationUpdateService";
 
@@ -100,10 +86,10 @@ public class TraxLocationUpdateService extends Service implements LocationListen
 
     private void setupCriteria() {
         criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setBearingAccuracy(Criteria.NO_REQUIREMENT);
-        criteria.setSpeedAccuracy(Criteria.NO_REQUIREMENT);
-        criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setAccuracy(Criteria.ACCURACY_HIGH);
+		criteria.setBearingAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setSpeedAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
     }
 
     private void persistLocation(Location location) {

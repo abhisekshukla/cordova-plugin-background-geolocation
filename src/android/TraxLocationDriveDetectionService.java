@@ -1,42 +1,31 @@
 package com.tenforwardconsulting.cordova.bgloc;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Iterator;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.tenforwardconsulting.cordova.bgloc.data.DAOFactory;
-import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
+import java.util.Date;
 
 import android.app.Service;
-
 import android.content.Context;
 import android.content.Intent;
-
-import android.location.Location;
 import android.location.Criteria;
+import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
-
 import android.util.Log;
+
+import com.tenforwardconsulting.cordova.bgloc.data.DAOFactory;
+import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
 
 public class TraxLocationDriveDetectionService extends Service implements LocationListener {
     private Criteria criteria;
     private LocationManager locationManager;
     private PowerManager.WakeLock wakeLock;
-    private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 30 * 1000; //milliseconds
-    private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 402.336; //meters 402.336 meters ~ 1/4 mile
+	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 30 * 1000; //milliseconds
+	private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 201.168; //meters 402.336 meters ~ 1/4 mile or 201.168 ~ 1/8 mile
     private String TAG = "TraxLocationDriveDetectionService";
+    private Date driveDetectionDelayDate;
+	private double DRIVE_DETECTION_DELAY_WINDOW = 60 * 1000; //milliseconds
 
     @Override
     public void onCreate() {
@@ -51,13 +40,27 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "starting");
+        boolean delayDriveDetection = intent.getBooleanExtra("delayDriveDetection", /*default*/true);
+        Log.d(TAG, "delayDriveDetection: " + delayDriveDetection);
+        if (delayDriveDetection)
+        {
+            this.driveDetectionDelayDate = new Date();
+        }
         this.locationManager.removeUpdates(this);
         this.locationManager.requestLocationUpdates(MIN_TIME_BETWEEN_LOCATION_UPDATES, (float)MIN_DISTANCE_BETWEEN_LOCATION_UPDATES, this.criteria, this, null);
         return this.START_REDELIVER_INTENT;
     }
 
     public void onLocationChanged(Location location) {
-        this.persistLocation(location);
+        Log.d(TAG, "Drive detection location changed");
+        if (this.driveDetectionDelayDate == null ||
+            new Date().getTime() - this.driveDetectionDelayDate.getTime() > DRIVE_DETECTION_DELAY_WINDOW)
+        {
+            this.persistLocation(location);
+        }
+        else {
+            Log.d(TAG, "Did not persist location");
+        }
     }
 
     @Override
@@ -101,11 +104,11 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
 
     private void setupCriteria() {
         criteria = new Criteria();
-        criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-        criteria.setAccuracy(Criteria.NO_REQUIREMENT);
-        criteria.setBearingAccuracy(Criteria.NO_REQUIREMENT);
-        criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
+		criteria.setPowerRequirement(Criteria.POWER_LOW);
+		criteria.setAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setBearingAccuracy(Criteria.NO_REQUIREMENT);
+		criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
     }
 
     private void persistLocation(Location location) {
