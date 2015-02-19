@@ -134,7 +134,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
 		criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
 		criteria.setHorizontalAccuracy(Criteria.ACCURACY_LOW);
 		criteria.setBearingAccuracy(Criteria.ACCURACY_LOW);
-		criteria.setVerticalAccuracy(Criteria.ACCURACY_LOW);
+		criteria.setVerticalAccuracy(Criteria.NO_REQUIREMENT);
 		criteria.setPowerRequirement(Criteria.POWER_LOW);
     }
 

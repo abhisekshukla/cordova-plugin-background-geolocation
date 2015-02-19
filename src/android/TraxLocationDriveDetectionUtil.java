@@ -14,7 +14,7 @@ import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
 
 public class TraxLocationDriveDetectionUtil {
     private static String TAG = "TraxLocationDriveDetectionUtil";
-	private final static int SPEEDY_LOCATIONS_THRESHOLD = 1;
+	private final static int SPEEDY_LOCATIONS_THRESHOLD = 2;
     private final static int SPEED_LOCATIONS_TIME_WINDOW = 8 * 60 * 1000; //8 minutes
 	private final static double FLOOR = 2.01168; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
     private final static double CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour

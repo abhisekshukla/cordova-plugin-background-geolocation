@@ -19,7 +19,7 @@ public class TraxLocationUpdateService extends Service implements LocationListen
     private Criteria criteria;
     private LocationManager locationManager;
     private PowerManager.WakeLock wakeLock;
-	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 30 * 1000; //milliseconds
+	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 15 * 1000; //milliseconds
     private float MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 0; //meters
     private String TAG = "TraxLocationUpdateService";
 
