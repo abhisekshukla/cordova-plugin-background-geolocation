@@ -15,7 +15,7 @@ import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
 public class TraxLocationDriveDetectionUtil {
     private static String TAG = "TraxLocationDriveDetectionUtil";
 	private final static int SPEEDY_LOCATIONS_THRESHOLD = 2;
-    private final static int SPEED_LOCATIONS_TIME_WINDOW = 8 * 60 * 1000; //8 minutes
+    private final static int SPEEDY_LOCATIONS_TIME_WINDOW = 8 * 60 * 1000; //8 minutes
 	private final static double FLOOR = 2.01168; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
     private final static double CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     private static final double R = 6372.8; // In kilometers
@@ -54,7 +54,7 @@ public class TraxLocationDriveDetectionUtil {
         long timestamp = location.getRecordedAt().getTime();
         Date now = new Date();
         long nowTimestamp = now.getTime();
-        return nowTimestamp - timestamp > SPEED_LOCATIONS_TIME_WINDOW;
+        return nowTimestamp - timestamp > SPEEDY_LOCATIONS_TIME_WINDOW;
     }
 
     private static boolean isSpeedyLocation(Location location, Location lastLocation) {

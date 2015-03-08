@@ -98,7 +98,7 @@
 
     speedyLocations = [NSMutableArray array];
     SPEEDY_LOCATIONS_THRESHOLD = 2;
-    FLOOR = 4.02336; //4.02336 meters/s ~ 9 miles per hour
+    FLOOR = 2.01168; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
     CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     SPEEDY_LOCATIONS_TIME_WINDOW = 480.0; //8 minutes
     DESIRED_ACCURACY = kCLLocationAccuracyHundredMeters;
