@@ -59,14 +59,16 @@
     NSInteger desiredAccuracy;
     CLActivityType activityType;
 
-    NSMutableArray *speedyLocations;
+    NSMutableArray *driveDetectionLocations;
 
     NSInteger SPEEDY_LOCATIONS_THRESHOLD;
     double FLOOR;
     double CEILING;
-    float SPEEDY_LOCATIONS_TIME_WINDOW;
+    double SPEEDY_LOCATIONS_TIME_WINDOW;
+    double DRIVE_DETECTION_DELAY_WINDOW;
     double DESIRED_ACCURACY;
     double DISTANCE_FILTER;
+    NSDate *driveDetectionDelayDate;
 }
 
 @synthesize syncCallbackId;
@@ -96,11 +98,12 @@
     maxStationaryLocationAttempts   = 4;
     maxSpeedAcquistionAttempts      = 3;
 
-    speedyLocations = [NSMutableArray array];
+    driveDetectionLocations = [NSMutableArray array];
     SPEEDY_LOCATIONS_THRESHOLD = 2;
     FLOOR = 2.01168; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
     CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     SPEEDY_LOCATIONS_TIME_WINDOW = 480.0; //8 minutes
+    DRIVE_DETECTION_DELAY_WINDOW = 600.0; //10 minutes
     DESIRED_ACCURACY = kCLLocationAccuracyHundredMeters;
     DISTANCE_FILTER = 402.336; //meters 402.336 meters ~ 1/4 mile
 
@@ -328,15 +331,18 @@
     NSLog(@"- CDVBackgroundGeoLocation watchDriveDetection");
     [self requestPermissionIfNecessary];
     [driveDetectionManager stopUpdatingLocation];
-    [driveDetectionManager stopMonitoringSignificantLocationChanges];
-    if ([CLLocationManager significantLocationChangeMonitoringAvailable])
+    [driveDetectionManager startUpdatingLocation];
+
+    BOOL delayDriveDetection = [[command.arguments objectAtIndex: 0] boolValue];
+    if (delayDriveDetection)
     {
-        [driveDetectionManager startMonitoringSignificantLocationChanges];
+        driveDetectionDelayDate = [NSDate date];
     }
     else
     {
-        [driveDetectionManager startUpdatingLocation];
+        driveDetectionDelayDate = nil;
     }
+
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [result setKeepCallbackAsBool:YES];
     self.driveDetectedCallbackId = command.callbackId;
@@ -346,28 +352,13 @@
 
 - (void) stopDriveDetection:(CDVInvokedUrlCommand*)command
 {
-    [driveDetectionManager stopUpdatingLocation];
-    [driveDetectionManager stopMonitoringSignificantLocationChanges];
     NSLog(@"- CDVBackgroundGeoLocation stopDriveDetection");
+    [driveDetectionManager stopUpdatingLocation];
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
 
-- (BOOL) isDriving
-{
-    NSLog(@"- CDVBackgroundGeoLocation isDriveDetected");
-    NSDate* now = [NSDate date];
-    NSMutableArray *discardedItems = [NSMutableArray array];
-    for (CLLocation *loc in speedyLocations) {
-        if ([now timeIntervalSinceDate:loc.timestamp] > SPEEDY_LOCATIONS_TIME_WINDOW)
-        {
-            [discardedItems addObject:loc];
-        }
-    }
-    [speedyLocations removeObjectsInArray: discardedItems];
-    BOOL isDriving = [speedyLocations count] >= SPEEDY_LOCATIONS_THRESHOLD;
-    return isDriving;
-}
+
 
 /**
  * Change pace to moving/stopped
@@ -519,9 +510,70 @@
     }
 }
 
--(BOOL) isSpeedy:(CLLocation *)location
+-(BOOL) isSpeedy:(CLLocation *)location driveDetectionLastLocation:(CLLocation *)driveDetectionLastLocation
 {
-    return location.speed >= FLOOR && location.speed <= CEILING;
+    if (location.speed != -1)
+    {
+        return location.speed >= FLOOR && location.speed <= CEILING;
+    }
+    else if (driveDetectionLastLocation != nil)
+    {
+         double meters = [ self directMetersFromLocation:location toCoordinate:driveDetectionLastLocation ];
+         double seconds = [ location.timestamp timeIntervalSinceDate:driveDetectionLastLocation.timestamp ];
+         double metersPerSecond = meters / seconds;
+         return metersPerSecond >= FLOOR && metersPerSecond <= CEILING;
+    }
+    return false;
+}
+
+-(BOOL) isNotInDriveDetectionDelayWindow:(CLLocation *)location
+{
+    return
+        driveDetectionDelayDate == nil ||
+        [location.timestamp timeIntervalSinceDate:driveDetectionDelayDate] > DRIVE_DETECTION_DELAY_WINDOW;
+}
+
+-(double) directMetersFromLocation:(CLLocation *)from toCoordinate:(CLLocation *)to
+{
+    static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
+    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
+
+    double latitudeArc  = (from.coordinate.latitude - to.coordinate.latitude) * DEG_TO_RAD;
+    double longitudeArc = (from.coordinate.longitude - to.coordinate.longitude) * DEG_TO_RAD;
+    double latitudeH = sin(latitudeArc * 0.5);
+    latitudeH *= latitudeH;
+    double lontitudeH = sin(longitudeArc * 0.5);
+    lontitudeH *= lontitudeH;
+    double tmp = cos(from.coordinate.latitude*DEG_TO_RAD) * cos(to.coordinate.latitude*DEG_TO_RAD);
+    return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
+}
+
+- (BOOL) isDriving
+{
+    NSLog(@"- CDVBackgroundGeoLocation isDriveDetected");
+    NSDate* now = [NSDate date];
+    NSMutableArray *discardedItems = [NSMutableArray array];
+    for (CLLocation *loc in driveDetectionLocations)
+    {
+        if ([now timeIntervalSinceDate:loc.timestamp] > SPEEDY_LOCATIONS_TIME_WINDOW)
+        {
+            [discardedItems addObject:loc];
+        }
+    }
+    [driveDetectionLocations removeObjectsInArray: discardedItems];
+
+    int speedyLocations = 0;
+    CLLocation *driveDetectionLastLocation = nil;
+    for (CLLocation *loc in driveDetectionLocations)
+    {
+        if ([self isSpeedy:loc driveDetectionLastLocation:driveDetectionLastLocation])
+        {
+            speedyLocations++;
+        }
+        driveDetectionLastLocation = loc;
+    }
+    BOOL isDriving = speedyLocations >= SPEEDY_LOCATIONS_THRESHOLD;
+    return isDriving;
 }
 
 -(void) locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
@@ -529,12 +581,16 @@
     NSLog(@"- CDVBackgroundGeoLocation didUpdateLocations");
     for (CLLocation *loc in locations)
     {
-        if ([self isSpeedy:loc])
+        if ([self isNotInDriveDetectionDelayWindow:loc])
         {
-            [speedyLocations addObject:loc];
+            [driveDetectionLocations addObject:loc];
         }
     }
     BOOL isDriving = [self isDriving];
+    if (isDriving)
+    {
+        [driveDetectionLocations removeAllObjects];
+    }
 
     NSMutableDictionary *returnInfo = [NSMutableDictionary dictionaryWithCapacity:1];
     [returnInfo setObject:[NSNumber numberWithBool:isDriving] forKey:@"isDriving"];

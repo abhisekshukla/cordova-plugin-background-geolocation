@@ -29,7 +29,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
 	private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 201.168; //meters 402.336 meters ~ 1/4 mile or 201.168 ~ 1/8 mile
     private String TAG = "TraxLocationDriveDetectionService";
     private Date driveDetectionDelayDate;
-	private double DRIVE_DETECTION_DELAY_WINDOW = 60 * 1000; //milliseconds
+	private double DRIVE_DETECTION_DELAY_WINDOW = 60 * 10 * 1000; //milliseconds
     private boolean isDriving = false;
     
     @Override
