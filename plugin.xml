@@ -38,7 +38,7 @@
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationUpdateService" android:enabled="true" android:process=":remote" />
-            <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationDriveDetectionService" android:enabled="true" android:process=":remote" />
+            <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationDriveDetectionService" android:enabled="true" />
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest">
