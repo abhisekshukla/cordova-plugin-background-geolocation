@@ -23,7 +23,6 @@
     <!-- android -->
     <platform name="android">
         <source-file src="src/android/BackgroundGpsPlugin.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
-        <source-file src="src/android/LocationUpdateService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationUpdateService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationDriveDetectionService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationDriveDetectionUtil.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
