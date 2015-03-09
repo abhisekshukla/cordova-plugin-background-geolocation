@@ -35,6 +35,7 @@
     NSNumber *maxBackgroundHours;
     CLLocationManager *locationManager;
     CLLocationManager *driveDetectionManager;
+    CLLocationManager *accurateDriveDetectionManager;
     UILocalNotification *localNotification;
 
     CDVLocationData *locationData;
@@ -66,9 +67,15 @@
     double CEILING;
     double SPEEDY_LOCATIONS_TIME_WINDOW;
     double DRIVE_DETECTION_DELAY_WINDOW;
+    double ACCURATE_DRIVE_DETECTION_WINDOW;
     double DESIRED_ACCURACY;
+    double ACCURATE_DESIRED_ACCURACY;
     double DISTANCE_FILTER;
+    double ACCURATE_DISTANCE_FILTER;
     NSDate *driveDetectionDelayDate;
+    BOOL accurateDriveDetectionMode;
+    NSDate *accurateDriveDetectionModeStart;
+    BOOL isDriveDetectionActive;
 }
 
 @synthesize syncCallbackId;
@@ -80,8 +87,10 @@
     // background location cache, for when no network is detected.
     locationManager = [[CLLocationManager alloc] init];
     driveDetectionManager = [[CLLocationManager alloc] init];
+    accurateDriveDetectionManager = [[CLLocationManager alloc] init];
     locationManager.delegate = self;
     driveDetectionManager.delegate = self;
+    accurateDriveDetectionManager.delegate = self;
 
     localNotification = [[UILocalNotification alloc] init];
     localNotification.timeZone = [NSTimeZone defaultTimeZone];
@@ -99,13 +108,19 @@
     maxSpeedAcquistionAttempts      = 3;
 
     driveDetectionLocations = [NSMutableArray array];
-    SPEEDY_LOCATIONS_THRESHOLD = 2;
-    FLOOR = 2.01168; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
+    SPEEDY_LOCATIONS_THRESHOLD = 5;
+    FLOOR = 4.02336; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
     CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     SPEEDY_LOCATIONS_TIME_WINDOW = 480.0; //8 minutes
     DRIVE_DETECTION_DELAY_WINDOW = 600.0; //10 minutes
+    ACCURATE_DRIVE_DETECTION_WINDOW = 480.8; //8 minutes
     DESIRED_ACCURACY = kCLLocationAccuracyHundredMeters;
-    DISTANCE_FILTER = 402.336; //meters 402.336 meters ~ 1/4 mile
+    ACCURATE_DESIRED_ACCURACY = kCLLocationAccuracyBest;
+    //DISTANCE_FILTER = 402.336; //meters 402.336 meters ~ 1/4 miles
+    DISTANCE_FILTER = 160.934; //meters 160.934 meters ~ 1/10 miles
+    ACCURATE_DISTANCE_FILTER = 0; //meters
+    accurateDriveDetectionMode = false;
+    isDriveDetectionActive = false;
 
     bgTask = UIBackgroundTaskInvalid;
 
@@ -150,8 +165,13 @@
 
     driveDetectionManager.activityType = activityType;
     driveDetectionManager.pausesLocationUpdatesAutomatically = YES;
-    driveDetectionManager.distanceFilter = DISTANCE_FILTER; // meters
+    driveDetectionManager.distanceFilter = DISTANCE_FILTER;
     driveDetectionManager.desiredAccuracy = DESIRED_ACCURACY;
+    //pausesLocationUpdatesAutomatically defaults to true
+    accurateDriveDetectionManager.activityType = activityType;
+    accurateDriveDetectionManager.pausesLocationUpdatesAutomatically = YES;
+    accurateDriveDetectionManager.distanceFilter = ACCURATE_DISTANCE_FILTER;
+    accurateDriveDetectionManager.desiredAccuracy = ACCURATE_DISTANCE_FILTER;
     //pausesLocationUpdatesAutomatically defaults to true
 
     NSLog(@"CDVBackgroundGeoLocation configure");
@@ -332,6 +352,8 @@
     [self requestPermissionIfNecessary];
     [driveDetectionManager stopUpdatingLocation];
     [driveDetectionManager startUpdatingLocation];
+    [accurateDriveDetectionManager stopUpdatingLocation];
+    isDriveDetectionActive = true;
 
     BOOL delayDriveDetection = [[command.arguments objectAtIndex: 0] boolValue];
     if (delayDriveDetection)
@@ -354,6 +376,8 @@
 {
     NSLog(@"- CDVBackgroundGeoLocation stopDriveDetection");
     [driveDetectionManager stopUpdatingLocation];
+    [accurateDriveDetectionManager stopUpdatingLocation];
+    isDriveDetectionActive = false;
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
@@ -562,6 +586,13 @@
     }
     [driveDetectionLocations removeObjectsInArray: discardedItems];
 
+    int speedyLocations = [self getSpeedyLocations];
+    BOOL isDriving = speedyLocations >= SPEEDY_LOCATIONS_THRESHOLD;
+    return isDriving;
+}
+
+- (int) getSpeedyLocations
+{
     int speedyLocations = 0;
     CLLocation *driveDetectionLastLocation = nil;
     for (CLLocation *loc in driveDetectionLocations)
@@ -572,13 +603,18 @@
         }
         driveDetectionLastLocation = loc;
     }
-    BOOL isDriving = speedyLocations >= SPEEDY_LOCATIONS_THRESHOLD;
-    return isDriving;
+    return speedyLocations;
 }
 
 -(void) locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
     NSLog(@"- CDVBackgroundGeoLocation didUpdateLocations");
+    if (!isDriveDetectionActive)
+    {
+        [driveDetectionManager stopUpdatingLocation];
+        [accurateDriveDetectionManager stopUpdatingLocation];
+        return;
+    }
     for (CLLocation *loc in locations)
     {
         if ([self isNotInDriveDetectionDelayWindow:loc])
@@ -592,12 +628,57 @@
         [driveDetectionLocations removeAllObjects];
     }
 
+    [self toggleAccurateDriveDetectionModeIfAppropriate:isDriving];
+
     NSMutableDictionary *returnInfo = [NSMutableDictionary dictionaryWithCapacity:1];
     [returnInfo setObject:[NSNumber numberWithBool:isDriving] forKey:@"isDriving"];
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnInfo];
     [result setKeepCallbackAsBool:YES];
     [self.commandDelegate sendPluginResult:result callbackId:self.driveDetectedCallbackId];
 }
+
+-(void) turnOnAccurateDriveDetectionModeIfAppropriate:(BOOL) isDriving
+{
+    NSDate* now = [NSDate date];
+    int speedyLocations = [self getSpeedyLocations];
+    if (speedyLocations > 0 && !isDriving)
+    {
+        [driveDetectionManager stopUpdatingLocation];
+        [accurateDriveDetectionManager startUpdatingLocation];
+        accurateDriveDetectionModeStart = now;
+        accurateDriveDetectionMode = true;
+    }
+
+}
+
+
+-(void) turnOffAccurateDriveDetectionModeIfAppropriate:(BOOL) isDriving
+{
+    NSDate* now = [NSDate date];
+    int speedyLocations = [self getSpeedyLocations];
+    BOOL isTimeExpired = [now timeIntervalSinceDate:accurateDriveDetectionModeStart] > ACCURATE_DRIVE_DETECTION_WINDOW;
+    if (isDriving || (speedyLocations == 0 && isTimeExpired))
+    {
+        [driveDetectionManager startUpdatingLocation];
+        [accurateDriveDetectionManager stopUpdatingLocation];
+        accurateDriveDetectionModeStart = nil;
+        accurateDriveDetectionMode = false;
+    }
+}
+
+-(void) toggleAccurateDriveDetectionModeIfAppropriate:(BOOL) isDriving
+{
+    if (!accurateDriveDetectionMode)
+    {
+        [self turnOnAccurateDriveDetectionModeIfAppropriate:isDriving];
+    }
+    else
+    {
+        [self turnOffAccurateDriveDetectionModeIfAppropriate:isDriving];
+    }
+}
+
+
 /**
 * Manual stationary location his-testing.  This seems to help stationary-exit detection in some places where the automatic geo-fencing soesn't
 */

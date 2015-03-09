@@ -14,20 +14,20 @@ import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
 
 public class TraxLocationDriveDetectionUtil {
     private static String TAG = "TraxLocationDriveDetectionUtil";
-	private final static int SPEEDY_LOCATIONS_THRESHOLD = 2;
+	private final static int SPEEDY_LOCATIONS_THRESHOLD = 5;
     private final static int SPEEDY_LOCATIONS_TIME_WINDOW = 8 * 60 * 1000; //8 minutes
-	private final static double FLOOR = 2.01168; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
+	private final static double FLOOR = 4.02336; //4.02336 meters/s ~ 9 MPH or 2.01168 meters/s ~ 4.5 MPH
     private final static double CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     private static final double R = 6372.8; // In kilometers
 
     public static boolean isDriving(Context applicationContext) {
         Log.d(TAG, "IN IS DRIVING");
-        List<Location> speedyLocations = getSpeedyLocations(applicationContext);
+        int speedyLocations = getSpeedyLocations(applicationContext);
         Log.d(TAG, "AFTER REMOVE OLD LOCATIONS");
-        return speedyLocations.size() >= SPEEDY_LOCATIONS_THRESHOLD;
+        return speedyLocations >= SPEEDY_LOCATIONS_THRESHOLD;
     }
 
-    private static List<Location> getSpeedyLocations(Context applicationContext) {
+    public static int getSpeedyLocations(Context applicationContext) {
         LocationDAO dao = DAOFactory.createDriveDetectionLocationDAO(applicationContext);
         Location[] locations = dao.getAllLocations();
         List<Location> speedyLocations = new ArrayList<Location>();
@@ -47,7 +47,7 @@ public class TraxLocationDriveDetectionUtil {
             }
             lastLocation = location;
         }
-        return speedyLocations;
+        return speedyLocations.size();
     }
 
     private static boolean isOldLocation(Location location) {
