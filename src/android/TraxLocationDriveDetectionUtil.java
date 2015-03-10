@@ -50,6 +50,15 @@ public class TraxLocationDriveDetectionUtil {
         return speedyLocations.size();
     }
 
+    public static void deleteAll(Context applicationContext) {
+        LocationDAO dao = DAOFactory.createDriveDetectionLocationDAO(applicationContext);
+        Location[] locations = dao.getAllLocations();
+        for (Location location : locations)
+        {
+            dao.deleteLocation(location);
+        }
+    }
+
     private static boolean isOldLocation(Location location) {
         long timestamp = location.getRecordedAt().getTime();
         Date now = new Date();

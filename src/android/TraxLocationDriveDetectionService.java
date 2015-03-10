@@ -27,17 +27,18 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private LocationManager locationManager;
     private LocationManager accurateLocationManager;
     private PowerManager.WakeLock wakeLock;
-	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 15 * 1000; //milliseconds
+	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 10 * 1000; //milliseconds
 //	private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 201.168; //meters 402.336 meters ~ 1/4 mile or 201.168 ~ 1/8 mile
     private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 160.934; //meters 160.934 meters ~ 1/10 miles
     private String TAG = "TraxLocationDriveDetectionService";
     private Date driveDetectionDelayDate;
-	private double DRIVE_DETECTION_DELAY_WINDOW = 60 * 10 * 1000; //milliseconds
+	private double DRIVE_DETECTION_DELAY_WINDOW = 10 * 1000; //milliseconds
     private boolean isDriving = false;
     private boolean accurateDriveDetectionMode = false;
     private Date accurateDriveDetectionModeStart;
     private double ACCURATE_DRIVE_DETECTION_WINDOW = 8 * 60 * 1000; //8 minutes
     private boolean isDriveDetectionActive = false;
+    private long ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES = 5 * 1000; //milliseconds
 
     @Override
     public void onCreate() {
@@ -82,6 +83,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
             boolean areWeDriving = this.isDriving || TraxLocationDriveDetectionUtil.isDriving(BackgroundGpsPlugin.context);
             this.toggleAccurateDriveDetectionModeIfAppropriate(areWeDriving);
             if (areWeDriving) {
+                TraxLocationDriveDetectionUtil.deleteAll(BackgroundGpsPlugin.context);
             	this.isDriving = true;
             	BackgroundGpsPlugin.activity.runOnUiThread(new Runnable() {
     				@Override
@@ -188,7 +190,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
         if (speedyLocations > 0 && !isDriving) {
             this.accurateDriveDetectionMode = true;
             this.locationManager.removeUpdates(this);
-            this.accurateLocationManager.requestLocationUpdates(0, 0, this.accurateCriteria, this, null);
+            this.accurateLocationManager.requestLocationUpdates(ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES, 0, this.accurateCriteria, this, null);
             this.accurateDriveDetectionModeStart = new Date();
         }
     }

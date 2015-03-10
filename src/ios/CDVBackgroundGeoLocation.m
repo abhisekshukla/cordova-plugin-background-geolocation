@@ -171,7 +171,7 @@
     accurateDriveDetectionManager.activityType = activityType;
     accurateDriveDetectionManager.pausesLocationUpdatesAutomatically = YES;
     accurateDriveDetectionManager.distanceFilter = ACCURATE_DISTANCE_FILTER;
-    accurateDriveDetectionManager.desiredAccuracy = ACCURATE_DISTANCE_FILTER;
+    accurateDriveDetectionManager.desiredAccuracy = ACCURATE_DESIRED_ACCURACY;
     //pausesLocationUpdatesAutomatically defaults to true
 
     NSLog(@"CDVBackgroundGeoLocation configure");
@@ -626,15 +626,14 @@
     if (isDriving)
     {
         [driveDetectionLocations removeAllObjects];
+        NSMutableDictionary *returnInfo = [NSMutableDictionary dictionaryWithCapacity:1];
+        [returnInfo setObject:[NSNumber numberWithBool:isDriving] forKey:@"isDriving"];
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnInfo];
+        [result setKeepCallbackAsBool:YES];
+        [self.commandDelegate sendPluginResult:result callbackId:self.driveDetectedCallbackId];
     }
 
     [self toggleAccurateDriveDetectionModeIfAppropriate:isDriving];
-
-    NSMutableDictionary *returnInfo = [NSMutableDictionary dictionaryWithCapacity:1];
-    [returnInfo setObject:[NSNumber numberWithBool:isDriving] forKey:@"isDriving"];
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:returnInfo];
-    [result setKeepCallbackAsBool:YES];
-    [self.commandDelegate sendPluginResult:result callbackId:self.driveDetectedCallbackId];
 }
 
 -(void) turnOnAccurateDriveDetectionModeIfAppropriate:(BOOL) isDriving
