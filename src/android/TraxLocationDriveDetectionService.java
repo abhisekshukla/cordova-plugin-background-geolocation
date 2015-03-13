@@ -28,7 +28,6 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private LocationManager accurateLocationManager;
     private PowerManager.WakeLock wakeLock;
 	private long MIN_TIME_BETWEEN_LOCATION_UPDATES = 10 * 1000; //milliseconds
-//	private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 201.168; //meters 402.336 meters ~ 1/4 mile or 201.168 ~ 1/8 mile
     private double MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 160.934; //meters 160.934 meters ~ 1/10 miles
     private String TAG = "TraxLocationDriveDetectionService";
     private Date driveDetectionDelayDate;
@@ -39,6 +38,10 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private double ACCURATE_DRIVE_DETECTION_WINDOW = 8 * 60 * 1000; //8 minutes
     private boolean isDriveDetectionActive = false;
     private long ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES = 5 * 1000; //milliseconds
+    //Note: This filter is different from iOS.  iOS is 30 meters.  We found
+    //The 30 meter restriction to be too intense when driving in a city.  Therefore,
+    //we're falling back to ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES = 5 seconds.
+    private long ACCURATE_MIN_DISTANCE_BETWEEN_LOCATION_UPDATES = 0; //meters
 
     @Override
     public void onCreate() {
@@ -190,7 +193,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
         if (speedyLocations > 0 && !isDriving) {
             this.accurateDriveDetectionMode = true;
             this.locationManager.removeUpdates(this);
-            this.accurateLocationManager.requestLocationUpdates(ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES, 0, this.accurateCriteria, this, null);
+            this.accurateLocationManager.requestLocationUpdates(ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES, (float)ACCURATE_MIN_DISTANCE_BETWEEN_LOCATION_UPDATES, this.accurateCriteria, this, null);
             this.accurateDriveDetectionModeStart = new Date();
         }
     }
