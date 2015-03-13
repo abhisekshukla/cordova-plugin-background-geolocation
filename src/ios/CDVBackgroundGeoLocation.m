@@ -67,6 +67,7 @@
     double CEILING;
     double SPEEDY_LOCATIONS_TIME_WINDOW;
     double DRIVE_DETECTION_DELAY_WINDOW;
+    double LOCATION_UPDATE_DELAY_WINDOW;
     double ACCURATE_DRIVE_DETECTION_WINDOW;
     double DESIRED_ACCURACY;
     double ACCURATE_DESIRED_ACCURACY;
@@ -76,6 +77,7 @@
     BOOL accurateDriveDetectionMode;
     NSDate *accurateDriveDetectionModeStart;
     BOOL isDriveDetectionActive;
+    NSDate *lastLocationDate;
 }
 
 @synthesize syncCallbackId;
@@ -113,12 +115,13 @@
     CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     SPEEDY_LOCATIONS_TIME_WINDOW = 480.0; //8 minutes
     DRIVE_DETECTION_DELAY_WINDOW = 600.0; //10 minutes
+    LOCATION_UPDATE_DELAY_WINDOW = 5.0; //5 seconds
     ACCURATE_DRIVE_DETECTION_WINDOW = 480.8; //8 minutes
     DESIRED_ACCURACY = kCLLocationAccuracyHundredMeters;
     ACCURATE_DESIRED_ACCURACY = kCLLocationAccuracyBest;
     //DISTANCE_FILTER = 402.336; //meters 402.336 meters ~ 1/4 miles
     DISTANCE_FILTER = 160.934; //meters 160.934 meters ~ 1/10 miles
-    ACCURATE_DISTANCE_FILTER = 0; //meters
+    ACCURATE_DISTANCE_FILTER = 30; //meters
     accurateDriveDetectionMode = false;
     isDriveDetectionActive = false;
 
@@ -557,6 +560,14 @@
         [location.timestamp timeIntervalSinceDate:driveDetectionDelayDate] > DRIVE_DETECTION_DELAY_WINDOW;
 }
 
+-(BOOL) isNotInLocationUpdateDelayWindow:(CLLocation *)location
+{
+    CLLocation *lastLocationUpdate = [driveDetectionLocations lastObject];
+    return
+        lastLocationUpdate == nil ||
+        [location.timestamp timeIntervalSinceDate:lastLocationUpdate.timestamp] > LOCATION_UPDATE_DELAY_WINDOW;
+}
+
 -(double) directMetersFromLocation:(CLLocation *)from toCoordinate:(CLLocation *)to
 {
     static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
@@ -617,7 +628,7 @@
     }
     for (CLLocation *loc in locations)
     {
-        if ([self isNotInDriveDetectionDelayWindow:loc])
+        if ([self isNotInDriveDetectionDelayWindow:loc] && [self isNotInLocationUpdateDelayWindow:loc])
         {
             [driveDetectionLocations addObject:loc];
         }
