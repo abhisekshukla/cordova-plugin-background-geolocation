@@ -121,7 +121,7 @@
     ACCURATE_DESIRED_ACCURACY = kCLLocationAccuracyBest;
     //DISTANCE_FILTER = 402.336; //meters 402.336 meters ~ 1/4 miles
     DISTANCE_FILTER = 160.934; //meters 160.934 meters ~ 1/10 miles
-    ACCURATE_DISTANCE_FILTER = 30; //meters
+    ACCURATE_DISTANCE_FILTER = 0; //meters
     accurateDriveDetectionMode = false;
     isDriveDetectionActive = false;
 
