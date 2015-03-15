@@ -26,6 +26,7 @@
         <source-file src="src/android/TraxLocationUpdateService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationDriveDetectionService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationDriveDetectionUtil.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
+        <source-file src="src/android/TraxLogAsyncTask.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/data/DAOFactory.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc/data" />
         <source-file src="src/android/data/Location.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc/data" />
         <source-file src="src/android/data/LocationSerializer.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc/data" />

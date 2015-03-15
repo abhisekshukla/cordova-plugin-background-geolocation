@@ -1,5 +1,6 @@
 package com.tenforwardconsulting.cordova.bgloc;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -10,7 +11,6 @@ import android.util.Log;
 import com.tenforwardconsulting.cordova.bgloc.data.DAOFactory;
 import com.tenforwardconsulting.cordova.bgloc.data.Location;
 import com.tenforwardconsulting.cordova.bgloc.data.LocationDAO;
-
 
 public class TraxLocationDriveDetectionUtil {
     private static String TAG = "TraxLocationDriveDetectionUtil";
@@ -57,6 +57,13 @@ public class TraxLocationDriveDetectionUtil {
         {
             dao.deleteLocation(location);
         }
+    }
+
+    public static void Log(String name, String detail) {
+        String[] params = new String[2];
+        params[0] = name;
+        params[1] = detail;
+        new TraxLogAsyncTask().execute(params);
     }
 
     private static boolean isOldLocation(Location location) {
