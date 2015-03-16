@@ -21,7 +21,7 @@ public class TraxLocationDriveDetectionUtil {
     private static final double R = 6372.8; // In kilometers
 
     private static List<TraxLog> logs = new ArrayList<TraxLog>();
-    private final static int LOG_BUFFER_THRESHOLD = 10;
+    private final static int LOG_BUFFER_THRESHOLD = 50;
 
     public static boolean isDriving(Context applicationContext) {
         Log.d(TAG, "IN IS DRIVING");
