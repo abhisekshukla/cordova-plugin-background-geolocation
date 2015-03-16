@@ -112,7 +112,7 @@ module.exports = {
             failure || function () { },
             'BackgroundGeoLocation',
             'watchDriveDetection',
-            [config.delayDriveDetection]);
+            [config.delayDriveDetection, config.userEmailAddress, config.baseUrl]);
     },
     /**
     * @param {Integer} stationaryRadius

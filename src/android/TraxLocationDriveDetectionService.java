@@ -46,7 +46,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     @Override
     public void onCreate() {
         Log.d(TAG, "creating");
-        TraxLocationDriveDetectionUtil.Log("CREATING", "");
+        TraxLocationDriveDetectionUtil.log("CREATING", "");
         this.setupLocationManager();
         this.setupAccurateLocationManager();
         this.setupCriteria();
@@ -59,7 +59,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "starting");
-        TraxLocationDriveDetectionUtil.Log("STARTING", "");
+        TraxLocationDriveDetectionUtil.log("STARTING", "");
         this.isDriveDetectionActive = true;
         boolean delayDriveDetection = intent.getBooleanExtra("delayDriveDetection", /*default*/true);
         Log.d(TAG, "delayDriveDetection: " + delayDriveDetection);
@@ -75,7 +75,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
 
     public void onLocationChanged(Location location) {
         Log.d(TAG, "Drive detection location changed");
-        TraxLocationDriveDetectionUtil.Log("LOCATION_CHANGED",
+        TraxLocationDriveDetectionUtil.log("LOCATION_CHANGED",
             "Speed: " + location.getSpeed() +
             " Lat: " + location.getLatitude() +
             " Long: " + location.getLongitude());
@@ -92,7 +92,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
             boolean areWeDriving = this.isDriving || TraxLocationDriveDetectionUtil.isDriving(BackgroundGpsPlugin.context);
             this.toggleAccurateDriveDetectionModeIfAppropriate(areWeDriving);
             if (areWeDriving) {
-                TraxLocationDriveDetectionUtil.Log("IS_DRIVING", "");
+                TraxLocationDriveDetectionUtil.log("IS_DRIVING", "");
                 TraxLocationDriveDetectionUtil.deleteAll(BackgroundGpsPlugin.context);
             	this.isDriving = true;
             	BackgroundGpsPlugin.activity.runOnUiThread(new Runnable() {
@@ -121,7 +121,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     @Override
     public boolean stopService(Intent intent) {
         Log.d(TAG, "stoping");
-        TraxLocationDriveDetectionUtil.Log("STOPPING", "");
+        TraxLocationDriveDetectionUtil.log("STOPPING", "");
         this.isDriveDetectionActive = false;
         this.locationManager.removeUpdates(this);
         this.accurateLocationManager.removeUpdates(this);
@@ -133,7 +133,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     @Override
     public void onDestroy() {
         Log.d(TAG, "destroying");
-        TraxLocationDriveDetectionUtil.Log("DESTROYING", "");
+        TraxLocationDriveDetectionUtil.log("DESTROYING", "");
         this.locationManager.removeUpdates(this);
         this.accurateLocationManager.removeUpdates(this);
         this.wakeLock.release();
@@ -200,7 +200,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     private void turnOnAccurateDriveDetectionModeIfAppropriate(boolean isDriving) {
         int speedyLocations = TraxLocationDriveDetectionUtil.getSpeedyLocations(BackgroundGpsPlugin.context);
         if (speedyLocations > 0 && !isDriving) {
-            TraxLocationDriveDetectionUtil.Log("ACCURATE_LOCATION_MANAGER_TURNED_ON", "");
+            TraxLocationDriveDetectionUtil.log("ACCURATE_LOCATION_MANAGER_TURNED_ON", "");
             this.accurateDriveDetectionMode = true;
             this.locationManager.removeUpdates(this);
             this.accurateLocationManager.requestLocationUpdates(ACCURATE_MIN_TIME_BETWEEN_LOCATION_UPDATES, (float)ACCURATE_MIN_DISTANCE_BETWEEN_LOCATION_UPDATES, this.accurateCriteria, this, null);
@@ -212,7 +212,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
         int speedyLocations = TraxLocationDriveDetectionUtil.getSpeedyLocations(BackgroundGpsPlugin.context);
         boolean isTimeExpired = new Date().getTime() - this.accurateDriveDetectionModeStart.getTime() > ACCURATE_DRIVE_DETECTION_WINDOW;
         if (isDriving || (speedyLocations == 0 && isTimeExpired)) {
-            TraxLocationDriveDetectionUtil.Log("ACCURATE_LOCATION_MANAGER_TURNED_OFF", "");
+            TraxLocationDriveDetectionUtil.log("ACCURATE_LOCATION_MANAGER_TURNED_OFF", "");
             this.accurateDriveDetectionMode = false;
             this.accurateLocationManager.removeUpdates(this);
             this.locationManager.requestLocationUpdates(MIN_TIME_BETWEEN_LOCATION_UPDATES, (float)MIN_DISTANCE_BETWEEN_LOCATION_UPDATES, this.criteria, this, null);

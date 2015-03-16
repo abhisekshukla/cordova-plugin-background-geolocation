@@ -110,7 +110,6 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 				@Override
 				public void run() {
 					activity.stopService(updateServiceIntent);
-					activity.startService(driveDetectionServiceIntent);
 					callbackContext.success();
 				}
 			});
@@ -193,6 +192,10 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 			retVal = true;
 			boolean delayDriveDetection = data.getBoolean(0);
 			driveDetectionServiceIntent.putExtra("delayDriveDetection", delayDriveDetection);
+			String userEmailAddress = data.getString(1);
+			TraxLogAsyncTask.userEmailAddress = userEmailAddress;
+			String baseUrl = data.getString(2);
+			TraxLogAsyncTask.baseUrl = baseUrl;
 			activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
@@ -229,18 +232,22 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 			
 		} else if (WATCH_DRIVE_DETECTION.equalsIgnoreCase(action)) {
 			retVal = true;
-			activity.stopService(driveDetectionServiceIntent);
-			activity.startService(driveDetectionServiceIntent);
+			boolean delayDriveDetection = data.getBoolean(0);
+			driveDetectionServiceIntent.putExtra("delayDriveDetection", delayDriveDetection);
+			String userEmailAddress = data.getString(1);
+			TraxLogAsyncTask.userEmailAddress = userEmailAddress;
+			String baseUrl = data.getString(2);
+			TraxLogAsyncTask.baseUrl = baseUrl;
 			BackgroundGpsPlugin.driveDetectionCallbackContext = callbackContext;
 			activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
+					activity.startService(driveDetectionServiceIntent);
 					PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
 				    pluginResult.setKeepCallback(true);
 				    BackgroundGpsPlugin.driveDetectionCallbackContext.sendPluginResult(pluginResult);
 				}
 			});
-
 		}
 		return retVal;
 	}

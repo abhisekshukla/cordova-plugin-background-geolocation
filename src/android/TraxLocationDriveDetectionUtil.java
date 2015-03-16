@@ -20,6 +20,9 @@ public class TraxLocationDriveDetectionUtil {
     private final static double CEILING = 53.6448; //53.6448 meters per second ~ 120 miles per hour
     private static final double R = 6372.8; // In kilometers
 
+    private static List<TraxLog> logs = new ArrayList<TraxLog>();
+    private final static int LOG_BUFFER_THRESHOLD = 10;
+
     public static boolean isDriving(Context applicationContext) {
         Log.d(TAG, "IN IS DRIVING");
         int speedyLocations = getSpeedyLocations(applicationContext);
@@ -59,11 +62,24 @@ public class TraxLocationDriveDetectionUtil {
         }
     }
 
-    public static void Log(String name, String detail) {
-        String[] params = new String[2];
-        params[0] = name;
-        params[1] = detail;
-        new TraxLogAsyncTask().execute(params);
+    public static void log(String name, String detail) {
+        TraxLog log = new TraxLog(name, detail);
+        synchronized (logs) {
+            logs.add(log);
+            if (logs.size() >= LOG_BUFFER_THRESHOLD) {
+                List<TraxLog> previousLogs = emptyLogs();
+                new TraxLogAsyncTask().execute(previousLogs.toArray(new TraxLog[previousLogs.size()]));
+            }
+        }
+    }
+
+    private static List<TraxLog> emptyLogs() {
+        List<TraxLog> previousLogs = new ArrayList<TraxLog>();
+        for (TraxLog log : logs) {
+           previousLogs.add(log);
+        }
+        logs = new ArrayList<TraxLog>();
+        return previousLogs;
     }
 
     private static boolean isOldLocation(Location location) {

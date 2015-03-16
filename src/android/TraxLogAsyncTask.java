@@ -8,31 +8,30 @@ import java.util.List;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.HttpResponse;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.NameValuePair;
 
-public class TraxLogAsyncTask extends AsyncTask<String, Void, HttpResponse> {
+import org.json.JSONArray;
+
+public class TraxLogAsyncTask extends AsyncTask<TraxLog, Void, HttpResponse> {
+
+    public static String userEmailAddress = "noaddress@hurdlr.com";
+    public static String baseUrl = "";
 
     private IOException ex;
 
-    protected HttpResponse doInBackground(String... infos) {
-        String userEmailAddress = "test+driving@hurdlr.com";
-        String name = infos[0];
-        String detail = infos[1];
+    protected HttpResponse doInBackground(TraxLog... logs) {
+        String logsString = TraxLog.serialize(logs, userEmailAddress);
+
         // Create a new HttpClient and Post Header
         HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost("http://dev.hurdlr.com/rest/v1/misc/log");
-
+        HttpPost httppost = new HttpPost(baseUrl + "/misc/logs");
+        httppost.setHeader("Content-type", "application/json");
         try {
             // Add your data
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-            nameValuePairs.add(new BasicNameValuePair("name", "MILEAGE_" + name));
-            nameValuePairs.add(new BasicNameValuePair("detail", detail + userEmailAddress));
-            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            httppost.setEntity(new StringEntity(logsString));
 
             // Execute HTTP Post Request
             return httpclient.execute(httppost);
