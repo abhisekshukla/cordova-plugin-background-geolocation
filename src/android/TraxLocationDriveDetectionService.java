@@ -49,6 +49,7 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
     @Override
     public void onCreate() {
         Log.d(TAG, "creating");
+        Log.d(TAG, "test log");
         TraxLocationDriveDetectionUtil.log("CREATING", "");
         this.setupLocationManager();
         this.setupAccurateLocationManager();
