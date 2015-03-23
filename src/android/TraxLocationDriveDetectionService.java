@@ -7,6 +7,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Service;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Criteria;
@@ -70,7 +73,19 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
         this.locationManager.removeUpdates(this);
         this.accurateLocationManager.removeUpdates(this);
         this.locationManager.requestLocationUpdates(MIN_TIME_BETWEEN_LOCATION_UPDATES, (float)MIN_DISTANCE_BETWEEN_LOCATION_UPDATES, this.criteria, this, null);
-        return this.START_REDELIVER_INTENT;
+        //So we need to do two things when we detect we're driving.
+        //1. We need to start the mileage tracker.  Truthfully, this could just mean that
+        //we change the mode of the drive detection service.  Right now we're starting a new
+        //service.  I guess that could migrate in the future.  Also, we need to pass through the
+        //points from this drive detection service to the mileage service if necessary.  Also, right now
+        //we're starting the mileage service via Javascript.  I guess we can continue to do this.  But we 
+        //should consider starting it through native code.
+        //2. We need to create a notification that says we've started your drive detection.  That
+        //notification will take you to the mileage tracker if you click it.  If you click cancel, it'll
+        //cancel the mileage tracker.  If you click complete, it'll complete the mileage tracker and take
+        //you to the mileage tracker.  One caveat, if the cordova activity is off, we need to restart
+        //the activity.
+        return START_REDELIVER_INTENT;
     }
 
     public void onLocationChanged(Location location) {
@@ -91,8 +106,10 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
             //if we're driving call the success callback
             boolean areWeDriving = this.isDriving || TraxLocationDriveDetectionUtil.isDriving(BackgroundGpsPlugin.context);
             this.toggleAccurateDriveDetectionModeIfAppropriate(areWeDriving);
-            if (areWeDriving) {
+            if (areWeDriving || true) {
                 TraxLocationDriveDetectionUtil.log("IS_DRIVING", "");
+                Intent mileageTrackerIntent = new Intent(this.getApplicationContext(), TraxLocationUpdateService.class);
+                this.getApplicationContext().startService(mileageTrackerIntent);
                 TraxLocationDriveDetectionUtil.deleteAll(BackgroundGpsPlugin.context);
             	this.isDriving = true;
             	BackgroundGpsPlugin.activity.runOnUiThread(new Runnable() {
@@ -150,10 +167,12 @@ public class TraxLocationDriveDetectionService extends Service implements Locati
         // TODO Auto-generated method stub
         Log.d(TAG, "- onProviderDisabled: " + provider);
     }
+
     public void onProviderEnabled(String provider) {
         // TODO Auto-generated method stub
         Log.d(TAG, "- onProviderEnabled: " + provider);
     }
+
     public void onStatusChanged(String provider, int status, Bundle extras) {
         // TODO Auto-generated method stub
         Log.d(TAG, "- onStatusChanged: " + provider + ", status: " + status);

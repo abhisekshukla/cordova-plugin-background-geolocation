@@ -38,6 +38,9 @@ public class TraxLocationUpdateService extends Service implements LocationListen
         Log.d(TAG, "starting");
         this.locationManager.removeUpdates(this);
         this.locationManager.requestLocationUpdates(MIN_TIME_BETWEEN_LOCATION_UPDATES, MIN_DISTANCE_BETWEEN_LOCATION_UPDATES, this.criteria, this, null);
+        Log.d(TAG, "afterStart");
+        TraxDistanceTrackerNotificationManager.createTrackingMileageNotification(this.getApplicationContext());
+        Log.d(TAG, "afterNotificationCreated");
         return this.START_REDELIVER_INTENT;
     }
 
@@ -50,6 +53,7 @@ public class TraxLocationUpdateService extends Service implements LocationListen
         Log.d(TAG, "stoping");
         this.locationManager.removeUpdates(this);
         this.wakeLock.release();
+        TraxDistanceTrackerNotificationManager.cancelTrackingMileageNotification(this.getApplicationContext());
         return super.stopService(intent);
     }
 
@@ -58,6 +62,7 @@ public class TraxLocationUpdateService extends Service implements LocationListen
         Log.d(TAG, "destroying");
         this.locationManager.removeUpdates(this);
         this.wakeLock.release();
+        TraxDistanceTrackerNotificationManager.cancelTrackingMileageNotification(this.getApplicationContext());
         super.onDestroy();
     }
 

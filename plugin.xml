@@ -26,6 +26,9 @@
         <source-file src="src/android/TraxLocationUpdateService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationDriveDetectionService.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLocationDriveDetectionUtil.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
+        <source-file src="src/android/TraxDriveDetectionReceiver.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
+        <source-file src="src/android/TraxDistanceTrackerReceiver.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
+        <source-file src="src/android/TraxDistanceTrackerNotificationManager.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLogAsyncTask.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/TraxLog.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc" />
         <source-file src="src/android/data/DAOFactory.java" target-dir="src/com/tenforwardconsulting/cordova/bgloc/data" />
@@ -38,8 +41,28 @@
 
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationUpdateService" android:enabled="true" android:process=":remote" />
-            <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationDriveDetectionService" android:enabled="true" />
+            <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationUpdateService" android:enabled="true" android:process=":Hurdlr_Distance_Tracking" />
+            <service android:name="com.tenforwardconsulting.cordova.bgloc.TraxLocationDriveDetectionService" android:enabled="true" android:process=":Hurdlr_Drive_Detection"  />
+            <receiver
+                    android:name="com.tenforwardconsulting.cordova.bgloc.TraxDriveDetectionReceiver"
+                    android:enabled="true"
+                    android:exported="true"
+                    android:label="TraxDriveDetectionReceiver">
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                </intent-filter>
+            </receiver>
+            <receiver
+                    android:name="com.tenforwardconsulting.cordova.bgloc.TraxDistanceTrackerReceiver"
+                    android:enabled="true"
+                    android:exported="true"
+                    android:label="TraxDistanceTrackerReceiver">
+                <intent-filter>
+                    <action android:name="TraxOpenMileageTracker" />
+                    <action android:name="TraxCancelMileageTracker" />
+                    <action android:name="TraxCompleteMileageTracker" />
+                </intent-filter>
+            </receiver>
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest">
@@ -49,7 +72,8 @@
             <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.WAKE_LOCK" />
-        </config-file>   
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+        </config-file>
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="BackgroundGeoLocation">
                 <param name="android-package" value="com.tenforwardconsulting.cordova.bgloc.BackgroundGpsPlugin"/>

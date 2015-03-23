@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
@@ -28,11 +29,13 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
     public static final String ACTION_STOP_DRIVE_DETECTION = "stopDriveDetection";
     public static final String ACTION_IS_DRIVE_DETECTED = "isDriveDetected";
     public static final String WATCH_DRIVE_DETECTION = "watchDriveDetection";
+    public static final String SETUP_NOTIFICATION = "setupNotifications";
 
 	static Activity activity = null;
 	static Context context = null;
 	private Intent updateServiceIntent = null;
 	private Intent driveDetectionServiceIntent = null;
+	public static Intent uServiceIntent;
 
     private Boolean isEnabled = false;
 
@@ -51,13 +54,16 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 
 	private Boolean isInitialized = false;
 	static CallbackContext driveDetectionCallbackContext = null;
+	public static CallbackContext notificationCallbackContext = null;
 
 	private void init() throws JSONException {
+		
 		if (!isInitialized) {
 			isInitialized = true;
-			activity = cordova.getActivity();
+			activity = this.cordova.getActivity();
 			context = activity.getApplicationContext();
 			updateServiceIntent = new Intent(context, TraxLocationUpdateService.class);
+			uServiceIntent = this.updateServiceIntent;
 			driveDetectionServiceIntent = new Intent(context, TraxLocationDriveDetectionService.class);
 		}
 	}
@@ -246,6 +252,16 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 					PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
 				    pluginResult.setKeepCallback(true);
 				    BackgroundGpsPlugin.driveDetectionCallbackContext.sendPluginResult(pluginResult);
+				}
+			});
+		} else if (SETUP_NOTIFICATION.equalsIgnoreCase(action)) {
+			notificationCallbackContext = callbackContext;
+			activity.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "notificationsAreSetup");
+				    pluginResult.setKeepCallback(true);
+				    notificationCallbackContext.sendPluginResult(pluginResult);
 				}
 			});
 		}

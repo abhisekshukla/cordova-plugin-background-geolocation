@@ -114,6 +114,9 @@ module.exports = {
             'watchDriveDetection',
             [config.delayDriveDetection, config.userEmailAddress, config.baseUrl]);
     },
+    setupNotifications: function (success) {
+        exec(success, function () { }, /*plugin*/"BackgroundGeoLocation", /*action*/"SetupNotifications", []);
+    },
     /**
     * @param {Integer} stationaryRadius
     * @param {Integer} desiredAccuracy
