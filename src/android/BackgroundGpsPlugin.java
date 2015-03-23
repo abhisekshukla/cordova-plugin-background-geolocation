@@ -255,6 +255,7 @@ public class BackgroundGpsPlugin extends CordovaPlugin {
 				}
 			});
 		} else if (SETUP_NOTIFICATION.equalsIgnoreCase(action)) {
+			retVal = true;
 			notificationCallbackContext = callbackContext;
 			activity.runOnUiThread(new Runnable() {
 				@Override
